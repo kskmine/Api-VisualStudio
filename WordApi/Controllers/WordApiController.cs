@@ -10,10 +10,10 @@ namespace WordApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class WordApi : ControllerBase
+    public class WordApiController : ControllerBase
     {
         WordDbContext _context;
-        public WordApi(WordDbContext context)
+        public WordApiController(WordDbContext context)
         {
             _context = context;
         }
@@ -21,7 +21,7 @@ namespace WordApi.Controllers
         [HttpGet]
         public IEnumerable<WordDefinition> Get()
         {
-            return _context.WordDefinitions.ToList();
+            return _context.WordDefinitions.Include(c=>c.Meanings).ToList();
         }
 
         // GET api/<WordApi>/5
@@ -46,6 +46,20 @@ namespace WordApi.Controllers
             entity.Id = id;
             _context.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
+            foreach (var meaning in entity.Meanings)
+            {
+                if (meaning.Id>0)
+                {
+                    _context.Attach(meaning);
+                    _context.Entry(meaning).State = EntityState.Modified;
+                }
+                else
+                {
+                    meaning.WordDefinitionId = entity.Id;
+                    _context.WordMeanings.Add(meaning);
+                }
+            }
+
             _context.SaveChanges();
 
         }
@@ -55,6 +69,14 @@ namespace WordApi.Controllers
         public void Delete(int id)
         {
             var deleted = _context.WordDefinitions.First(c => c.Id == id);
+            _context.Remove(deleted);
+            _context.SaveChanges();
+        }
+       
+        [HttpDelete("meaning/{id}")]
+        public void DeleteMeaning(int id)
+        {
+            var deleted = _context.WordMeanings.First(c => c.Id == id);
             _context.Remove(deleted);
             _context.SaveChanges();
         }

@@ -14,5 +14,6 @@ using System.Threading.Tasks;
         }
 
         public DbSet<WordDefinition> WordDefinitions { get; set; }
+        public DbSet<WordMeaning> WordMeanings { get; set; }
     }
 }
